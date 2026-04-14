@@ -16,10 +16,10 @@ import { Shield, Eye, EyeOff, Check, X } from "lucide-react";
 const ADMIN_KEY = "notipush_admin_secret";
 
 export default function SettingsPage() {
-  const [secret, setSecret] = useState(() => localStorage.getItem(ADMIN_KEY) ?? "");
+  const [secret, setSecret] = useState(() => (typeof window !== "undefined" ? localStorage.getItem(ADMIN_KEY) : null) ?? "");
   const [saved, setSaved] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
-  const [hasStored, setHasStored] = useState(() => !!localStorage.getItem(ADMIN_KEY));
+  const [hasStored, setHasStored] = useState(() => typeof window !== "undefined" && !!localStorage.getItem(ADMIN_KEY));
 
   const handleSave = () => {
     if (secret.trim()) {
