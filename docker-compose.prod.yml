@@ -39,7 +39,7 @@ services:
     volumes:
       - natsdata:/data
     healthcheck:
-      test: ["CMD", "nats-server", "--signal", "ldm"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8222/healthz || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
