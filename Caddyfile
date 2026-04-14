@@ -1,0 +1,9 @@
+# Frontend dashboard
+{$DOMAIN} {
+	reverse_proxy web:3000
+}
+
+# API backend
+{$DOMAIN_API} {
+	reverse_proxy api:8080
+}

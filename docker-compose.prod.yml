@@ -1,0 +1,153 @@
+# =============================================================================
+# NotiPush - Production Docker Compose
+# =============================================================================
+# This is the ONLY file needed on the VPS (along with .env).
+# All images are pulled from Docker Hub — no source code required.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml logs -f
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Infrastructure
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: notipush-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: notipush-nats
+    restart: unless-stopped
+    command: ["--jetstream", "--store_dir", "/data", "-m", "8222"]
+    volumes:
+      - natsdata:/data
+    healthcheck:
+      test: ["CMD", "nats-server", "--signal", "ldm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Application
+  # ---------------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    container_name: notipush-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+      DOMAIN_API: ${DOMAIN_API}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    networks:
+      - internal
+
+  api:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/notipush-api:${IMAGE_TAG:-latest}
+    container_name: notipush-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: disable
+      NATS_URL: nats://nats:4222
+      API_HOST: 0.0.0.0
+      API_PORT: 8080
+      SDK_DIR: /app/sdk
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - internal
+
+  worker:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/notipush-api:${IMAGE_TAG:-latest}
+    container_name: notipush-worker
+    restart: unless-stopped
+    command: ["/app/worker"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: disable
+      NATS_URL: nats://nats:4222
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-10}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_CONTACT: ${VAPID_CONTACT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - internal
+
+  web:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/notipush-web:${IMAGE_TAG:-latest}
+    container_name: notipush-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+    depends_on:
+      - api
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  natsdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

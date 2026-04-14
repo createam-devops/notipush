@@ -1,0 +1,15 @@
+.git
+.github
+*.md
+.env
+.env.*
+!.env.example
+
+# Go
+notipush-api/tmp
+notipush-api/.air.toml
+
+# Node
+notipush-web/node_modules
+notipush-web/.next
+notipush-web/.env.local
