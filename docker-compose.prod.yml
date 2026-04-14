@@ -49,31 +49,12 @@ services:
   # ---------------------------------------------------------------------------
   # Application
   # ---------------------------------------------------------------------------
-  caddy:
-    image: caddy:2-alpine
-    container_name: notipush-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    environment:
-      DOMAIN: ${DOMAIN}
-      DOMAIN_API: ${DOMAIN_API}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - api
-      - web
-    networks:
-      - internal
-
   api:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/notipush-api:${IMAGE_TAG:-latest}
     container_name: notipush-api
     restart: unless-stopped
+    ports:
+      - "${API_PORT_EXT:-8050}:8080"
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -129,6 +110,8 @@ services:
     image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/notipush-web:${IMAGE_TAG:-latest}
     container_name: notipush-web
     restart: unless-stopped
+    ports:
+      - "${WEB_PORT_EXT:-3050}:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       AUTH_SECRET: ${AUTH_SECRET}
@@ -145,8 +128,6 @@ services:
 volumes:
   pgdata:
   natsdata:
-  caddy_data:
-  caddy_config:
 
 networks:
   internal:

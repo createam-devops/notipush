@@ -138,7 +138,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "Caddyfile,docker-compose.prod.yml"
+          source: "docker-compose.prod.yml,nginx/notipush.conf"
           target: ${{ vars.DEPLOY_DIR || '/opt/notipush' }}
 
       - name: Deploy to VPS
@@ -149,6 +149,12 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd ${{ vars.DEPLOY_DIR || '/opt/notipush' }}
+            
+            # Install Nginx site config if not already linked
+            NGINX_CONF="/etc/nginx/sites-available/notipush.conf"
+            cp nginx/notipush.conf "$NGINX_CONF"
+            ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/notipush.conf
+            nginx -t && systemctl reload nginx
             
             # Pull latest images
             docker compose -f docker-compose.prod.yml pull api web worker
