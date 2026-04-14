@@ -50,12 +50,21 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (!apiKey) return;
-    setLoading(true);
-    const api = projectApi(apiKey);
-    api.listNotifications()
-      .then(setNotifications)
-      .catch(() => setNotifications([]))
-      .finally(() => setLoading(false));
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const api = projectApi(apiKey);
+        const data = await api.listNotifications();
+        if (active) setNotifications(data);
+      } catch {
+        if (active) setNotifications([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => { active = false; };
   }, [apiKey]);
 
   const handleSend = async () => {

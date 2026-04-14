@@ -29,16 +29,22 @@ export default function SubscribersPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!apiKey || !selectedAppId) {
-      setSubs([]);
-      return;
-    }
-    setLoading(true);
-    const api = projectApi(apiKey);
-    api.listSubscriptions(selectedAppId)
-      .then(setSubs)
-      .catch(() => setSubs([]))
-      .finally(() => setLoading(false));
+    if (!apiKey || !selectedAppId) return;
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const api = projectApi(apiKey);
+        const data = await api.listSubscriptions(selectedAppId);
+        if (active) setSubs(data);
+      } catch {
+        if (active) setSubs([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => { active = false; };
   }, [apiKey, selectedAppId]);
 
   if (!apiKey) {

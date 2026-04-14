@@ -32,10 +32,9 @@ export default function ProjectsPage() {
   const [createdResult, setCreatedResult] = useState<CreateProjectResponse | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [error, setError] = useState("");
-  const [hasAdminSecret, setHasAdminSecret] = useState(false);
+  const [hasAdminSecret] = useState(() => !!localStorage.getItem("notipush_admin_secret"));
 
   useEffect(() => {
-    setHasAdminSecret(!!localStorage.getItem("notipush_admin_secret"));
     admin.listProjects().then(setProjects).catch(console.error).finally(() => setLoading(false));
   }, []);
 

@@ -41,16 +41,22 @@ export default function TopicsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!apiKey || !selectedAppId) {
-      setTopics([]);
-      return;
-    }
-    setLoading(true);
-    const api = projectApi(apiKey);
-    api.listTopics(selectedAppId)
-      .then(setTopics)
-      .catch(() => setTopics([]))
-      .finally(() => setLoading(false));
+    if (!apiKey || !selectedAppId) return;
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const api = projectApi(apiKey);
+        const data = await api.listTopics(selectedAppId);
+        if (active) setTopics(data);
+      } catch {
+        if (active) setTopics([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => { active = false; };
   }, [apiKey, selectedAppId]);
 
   const handleCreate = async () => {

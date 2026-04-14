@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,18 +16,10 @@ import { Shield, Eye, EyeOff, Check, X } from "lucide-react";
 const ADMIN_KEY = "notipush_admin_secret";
 
 export default function SettingsPage() {
-  const [secret, setSecret] = useState("");
+  const [secret, setSecret] = useState(() => localStorage.getItem(ADMIN_KEY) ?? "");
   const [saved, setSaved] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
-  const [hasStored, setHasStored] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(ADMIN_KEY);
-    if (stored) {
-      setSecret(stored);
-      setHasStored(true);
-    }
-  }, []);
+  const [hasStored, setHasStored] = useState(() => !!localStorage.getItem(ADMIN_KEY));
 
   const handleSave = () => {
     if (secret.trim()) {

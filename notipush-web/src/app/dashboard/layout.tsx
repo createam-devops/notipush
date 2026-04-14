@@ -82,6 +82,7 @@ function UserInfo() {
     <div className="px-3 py-2">
       <div className="flex items-center gap-3">
         {session.user.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={session.user.image}
             alt=""
