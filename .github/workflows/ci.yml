@@ -150,11 +150,14 @@ jobs:
           script: |
             cd ${{ vars.DEPLOY_DIR || '/opt/notipush' }}
             
-            # Install Nginx site config if not already linked
+            # Install Nginx site config only if it doesn't exist yet
+            # (certbot modifies the file to add SSL — we must not overwrite it)
             NGINX_CONF="/etc/nginx/sites-available/notipush.conf"
-            cp nginx/notipush.conf "$NGINX_CONF"
-            ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/notipush.conf
-            nginx -t && systemctl reload nginx
+            if [ ! -f "$NGINX_CONF" ]; then
+              cp nginx/notipush.conf "$NGINX_CONF"
+              ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/notipush.conf
+              nginx -t && systemctl reload nginx
+            fi
             
             # Pull latest images
             docker compose -f docker-compose.prod.yml pull api web worker
