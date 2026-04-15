@@ -1,11 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_URL}${path}`;
-  const res = await fetch(url, {
+  const res = await fetch(path, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -145,7 +142,7 @@ export function projectApi(apiKey: string) {
     },
 
     deleteApplication(id: string) {
-      return request<void>(`/api/v1/applications/${id}`, {
+      return request<void>(`/api/v1/applications/${encodeURIComponent(id)}`, {
         method: "DELETE",
         headers,
       });
@@ -153,7 +150,7 @@ export function projectApi(apiKey: string) {
 
     // Topics
     createTopic(appId: string, data: { name: string; description?: string }) {
-      return request<Topic>(`/api/v1/applications/${appId}/topics`, {
+      return request<Topic>(`/api/v1/applications/${encodeURIComponent(appId)}/topics`, {
         method: "POST",
         body: JSON.stringify(data),
         headers,
@@ -161,7 +158,7 @@ export function projectApi(apiKey: string) {
     },
 
     listTopics(appId: string) {
-      return request<Topic[]>(`/api/v1/applications/${appId}/topics`, {
+      return request<Topic[]>(`/api/v1/applications/${encodeURIComponent(appId)}/topics`, {
         headers,
       });
     },
@@ -169,7 +166,7 @@ export function projectApi(apiKey: string) {
     // Subscriptions
     listSubscriptions(appId: string) {
       return request<Subscription[]>(
-        `/api/v1/applications/${appId}/subscriptions`,
+        `/api/v1/applications/${encodeURIComponent(appId)}/subscriptions`,
         { headers }
       );
     },
@@ -197,7 +194,7 @@ export function projectApi(apiKey: string) {
     },
 
     getNotification(id: string) {
-      return request<Notification>(`/api/v1/notifications/${id}`, { headers });
+      return request<Notification>(`/api/v1/notifications/${encodeURIComponent(id)}`, { headers });
     },
   };
 }

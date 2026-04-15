@@ -113,7 +113,6 @@ services:
     ports:
       - "${WEB_PORT_EXT:-3050}:3000"
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       API_URL_INTERNAL: http://api:8080
       ADMIN_SECRET: ${ADMIN_SECRET}
       AUTH_SECRET: ${AUTH_SECRET}
