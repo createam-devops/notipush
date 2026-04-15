@@ -84,28 +84,39 @@ export interface Topic {
   created_at: string;
 }
 
-// --- Admin endpoints (protected by ADMIN_SECRET) ---
+// --- Admin endpoints (proxied through Next.js API routes — secret stays server-side) ---
 
-function adminHeaders(): HeadersInit {
-  if (typeof window === "undefined") return {};
-  const secret = localStorage.getItem("notipush_admin_secret");
-  if (!secret) return {};
-  return { Authorization: `Bearer ${secret}` };
+async function proxyRequest<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(error.error || `Request failed: ${res.status}`);
+  }
+
+  if (res.status === 204) return {} as T;
+  return res.json();
 }
 
 export const admin = {
   createProject(data: { name: string; webhook_url?: string }) {
-    return request<CreateProjectResponse>("/admin/projects", {
+    return proxyRequest<CreateProjectResponse>("/api/admin/projects", {
       method: "POST",
       body: JSON.stringify(data),
-      headers: adminHeaders(),
     });
   },
 
   listProjects() {
-    return request<Project[]>("/admin/projects", {
-      headers: adminHeaders(),
-    });
+    return proxyRequest<Project[]>("/api/admin/projects");
   },
 };
 

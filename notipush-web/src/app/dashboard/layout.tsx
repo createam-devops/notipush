@@ -14,7 +14,6 @@ import {
   Tags,
   Unplug,
   Plug,
-  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -29,7 +28,6 @@ const navigation = [
   { name: "Suscriptores", href: "/dashboard/subscribers", icon: Users },
   { name: "Topics", href: "/dashboard/topics", icon: Tags },
   { name: "Notificaciones", href: "/dashboard/notifications", icon: Send },
-  { name: "Configuración", href: "/dashboard/settings", icon: Settings },
 ];
 
 function ProjectStatus() {

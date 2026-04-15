@@ -18,10 +18,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Copy, Check, FolderOpen, Plug, Shield } from "lucide-react";
+import { Plus, Copy, Check, FolderOpen, Plug } from "lucide-react";
 import { admin, type Project, type CreateProjectResponse } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
-import Link from "next/link";
 
 export default function ProjectsPage() {
   const { connect } = useProject();
@@ -32,7 +31,6 @@ export default function ProjectsPage() {
   const [createdResult, setCreatedResult] = useState<CreateProjectResponse | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [error, setError] = useState("");
-  const [hasAdminSecret] = useState(() => typeof window !== "undefined" && !!localStorage.getItem("notipush_admin_secret"));
 
   useEffect(() => {
     admin.listProjects().then(setProjects).catch(console.error).finally(() => setLoading(false));
@@ -156,25 +154,6 @@ export default function ProjectsPage() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {!hasAdminSecret && (
-        <div className="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950 p-4 flex items-start gap-3">
-          <Shield className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              Admin Secret no configurado
-            </p>
-            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-              Si el servidor tiene <code className="bg-yellow-100 dark:bg-yellow-900 rounded px-1">ADMIN_SECRET</code> configurado,
-              necesitas establecerlo en{" "}
-              <Link href="/dashboard/settings" className="underline font-medium">
-                Configuración
-              </Link>{" "}
-              para crear y listar proyectos.
-            </p>
-          </div>
-        </div>
-      )}
 
       {loading ? (
         <p className="text-muted-foreground">Cargando proyectos...</p>
