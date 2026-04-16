@@ -2,6 +2,19 @@ import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.API_URL_INTERNAL || "http://localhost:8080";
+const ADMIN_SECRET = process.env.ADMIN_SECRET || "";
+
+function getProjectId(req: NextRequest): string | null {
+  return req.headers.get("x-project-id");
+}
+
+function internalHeaders(projectId: string): HeadersInit {
+  return {
+    "X-Admin-Secret": ADMIN_SECRET,
+    "X-Project-Id": projectId,
+    "Content-Type": "application/json",
+  };
+}
 
 export async function GET(
   req: NextRequest,
@@ -12,9 +25,9 @@ export async function GET(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const apiKey = req.headers.get("x-api-key");
-  if (!apiKey) {
-    return NextResponse.json({ error: "missing api key" }, { status: 400 });
+  const projectId = getProjectId(req);
+  if (!projectId) {
+    return NextResponse.json({ error: "missing project id" }, { status: 400 });
   }
 
   const { path } = await params;
@@ -25,10 +38,7 @@ export async function GET(
   });
 
   const res = await fetch(url.toString(), {
-    headers: {
-      "X-API-Key": apiKey,
-      "Content-Type": "application/json",
-    },
+    headers: internalHeaders(projectId),
   });
 
   if (res.status === 204) {
@@ -48,9 +58,9 @@ export async function POST(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const apiKey = req.headers.get("x-api-key");
-  if (!apiKey) {
-    return NextResponse.json({ error: "missing api key" }, { status: 400 });
+  const projectId = getProjectId(req);
+  if (!projectId) {
+    return NextResponse.json({ error: "missing project id" }, { status: 400 });
   }
 
   const { path } = await params;
@@ -66,10 +76,7 @@ export async function POST(
 
   const res = await fetch(`${API_URL}${targetPath}`, {
     method: "POST",
-    headers: {
-      "X-API-Key": apiKey,
-      "Content-Type": "application/json",
-    },
+    headers: internalHeaders(projectId),
     body,
   });
 
@@ -90,9 +97,9 @@ export async function DELETE(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const apiKey = req.headers.get("x-api-key");
-  if (!apiKey) {
-    return NextResponse.json({ error: "missing api key" }, { status: 400 });
+  const projectId = getProjectId(req);
+  if (!projectId) {
+    return NextResponse.json({ error: "missing project id" }, { status: 400 });
   }
 
   const { path } = await params;
@@ -100,10 +107,7 @@ export async function DELETE(
 
   const res = await fetch(`${API_URL}${targetPath}`, {
     method: "DELETE",
-    headers: {
-      "X-API-Key": apiKey,
-      "Content-Type": "application/json",
-    },
+    headers: internalHeaders(projectId),
   });
 
   if (res.status === 204) {

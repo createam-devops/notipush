@@ -24,17 +24,17 @@ import { projectApi, type Subscription } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
 
 export default function SubscribersPage() {
-  const { apiKey, apps, selectedAppId, selectApp } = useProject();
+  const { projectId, apps, selectedAppId, selectApp } = useProject();
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!apiKey || !selectedAppId) return;
+    if (!projectId || !selectedAppId) return;
     let active = true;
     const load = async () => {
       setLoading(true);
       try {
-        const api = projectApi(apiKey);
+        const api = projectApi(projectId);
         const data = await api.listSubscriptions(selectedAppId);
         if (active) setSubs(data);
       } catch {
@@ -45,9 +45,9 @@ export default function SubscribersPage() {
     };
     load();
     return () => { active = false; };
-  }, [apiKey, selectedAppId]);
+  }, [projectId, selectedAppId]);
 
-  if (!apiKey) {
+  if (!projectId) {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6">Suscriptores</h1>

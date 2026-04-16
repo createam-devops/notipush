@@ -34,7 +34,7 @@ import { projectApi, type Notification as Notif } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
 
 export default function NotificationsPage() {
-  const { apiKey, apps, selectedAppId, selectApp } = useProject();
+  const { projectId, apps, selectedAppId, selectApp } = useProject();
   const [notifications, setNotifications] = useState<Notif[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -49,12 +49,12 @@ export default function NotificationsPage() {
   const [sendSuccess, setSendSuccess] = useState(false);
 
   useEffect(() => {
-    if (!apiKey) return;
+    if (!projectId) return;
     let active = true;
     const load = async () => {
       setLoading(true);
       try {
-        const api = projectApi(apiKey);
+        const api = projectApi(projectId);
         const data = await api.listNotifications();
         if (active) setNotifications(data);
       } catch {
@@ -65,15 +65,15 @@ export default function NotificationsPage() {
     };
     load();
     return () => { active = false; };
-  }, [apiKey]);
+  }, [projectId]);
 
   const handleSend = async () => {
-    if (!title.trim() || !body.trim() || !selectedAppId || !apiKey) return;
+    if (!title.trim() || !body.trim() || !selectedAppId || !projectId) return;
     setSending(true);
     setError("");
     setSendSuccess(false);
     try {
-      const api = projectApi(apiKey);
+      const api = projectApi(projectId);
       const notif = await api.sendNotification({
         app_id: selectedAppId,
         title: title.trim(),
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
     }
   };
 
-  if (!apiKey) {
+  if (!projectId) {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6">Notificaciones</h1>

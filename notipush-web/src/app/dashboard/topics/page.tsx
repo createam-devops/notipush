@@ -32,7 +32,7 @@ import { projectApi, type Topic } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
 
 export default function TopicsPage() {
-  const { apiKey, apps, selectedAppId, selectApp } = useProject();
+  const { projectId, apps, selectedAppId, selectApp } = useProject();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,12 +41,12 @@ export default function TopicsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!apiKey || !selectedAppId) return;
+    if (!projectId || !selectedAppId) return;
     let active = true;
     const load = async () => {
       setLoading(true);
       try {
-        const api = projectApi(apiKey);
+        const api = projectApi(projectId);
         const data = await api.listTopics(selectedAppId);
         if (active) setTopics(data);
       } catch {
@@ -57,13 +57,13 @@ export default function TopicsPage() {
     };
     load();
     return () => { active = false; };
-  }, [apiKey, selectedAppId]);
+  }, [projectId, selectedAppId]);
 
   const handleCreate = async () => {
-    if (!name.trim() || !apiKey || !selectedAppId) return;
+    if (!name.trim() || !projectId || !selectedAppId) return;
     setError("");
     try {
-      const api = projectApi(apiKey);
+      const api = projectApi(projectId);
       const topic = await api.createTopic(selectedAppId, {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -77,7 +77,7 @@ export default function TopicsPage() {
     }
   };
 
-  if (!apiKey) {
+  if (!projectId) {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6">Topics</h1>

@@ -93,7 +93,7 @@ func main() {
 
 	// API routes (protected by API key)
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(middleware.APIKeyAuth(projectRepo))
+		r.Use(middleware.APIKeyAuth(projectRepo, cfg.Admin.Secret))
 		r.Use(middleware.NewRateLimiter(120))
 
 		// Current project (from API key)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/notipush/notipush/internal/db"
 	"github.com/notipush/notipush/internal/models"
 )
@@ -43,12 +44,43 @@ func AdminAuth(secret string) func(http.Handler) http.Handler {
 }
 
 // APIKeyAuth validates the X-API-Key header and injects the project into context.
-func APIKeyAuth(projectRepo *db.ProjectRepo) func(http.Handler) http.Handler {
+// It also supports admin-level access via X-Admin-Secret + X-Project-Id headers
+// (used by the dashboard proxy to operate on behalf of a project).
+func APIKeyAuth(projectRepo *db.ProjectRepo, adminSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			apiKey := r.Header.Get("X-API-Key")
 			if apiKey == "" {
 				apiKey = strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+			}
+
+			// Allow admin-level access with project ID (for dashboard proxy)
+			if apiKey == "" && adminSecret != "" {
+				adminToken := r.Header.Get("X-Admin-Secret")
+				projectID := r.Header.Get("X-Project-Id")
+				if adminToken != "" && projectID != "" {
+					if subtle.ConstantTimeCompare([]byte(adminToken), []byte(adminSecret)) != 1 {
+						http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+						return
+					}
+					pid, err := uuid.Parse(projectID)
+					if err != nil {
+						http.Error(w, `{"error":"invalid project id"}`, http.StatusBadRequest)
+						return
+					}
+					project, err := projectRepo.GetByID(r.Context(), pid)
+					if err != nil {
+						http.Error(w, `{"error":"project not found"}`, http.StatusNotFound)
+						return
+					}
+					if !project.IsActive {
+						http.Error(w, `{"error":"project is inactive"}`, http.StatusForbidden)
+						return
+					}
+					ctx := context.WithValue(r.Context(), ProjectCtxKey, project)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
 			}
 
 			if apiKey == "" {

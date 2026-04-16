@@ -23,7 +23,7 @@ import { admin, type Project, type CreateProjectResponse } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
 
 export default function ProjectsPage() {
-  const { connect } = useProject();
+  const { connect, projectId: connectedId } = useProject();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -58,11 +58,9 @@ export default function ProjectsPage() {
     }
   };
 
-  const connectProject = async () => {
-    if (createdResult?.api_key) {
-      await connect(createdResult.api_key);
-      setDialogOpen(false);
-    }
+  const connectProject = async (id: string) => {
+    await connect(id);
+    setDialogOpen(false);
   };
 
   return (
@@ -95,12 +93,12 @@ export default function ProjectsPage() {
                     ¡Proyecto creado exitosamente!
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Guarda tu API Key ahora. No se mostrará de nuevo.
+                    Guarda tu API Key para usar el SDK. No se mostrará de nuevo.
                   </p>
                 </div>
 
                 <div>
-                  <Label className="text-xs text-muted-foreground">API Key</Label>
+                  <Label className="text-xs text-muted-foreground">API Key (para el SDK)</Label>
                   <div className="flex gap-2 mt-1">
                     <Input
                       readOnly
@@ -126,9 +124,9 @@ export default function ProjectsPage() {
                   />
                 </div>
 
-                <Button onClick={connectProject} className="w-full gap-2">
+                <Button onClick={() => connectProject(createdResult.project.id)} className="w-full gap-2">
                   <Plug className="h-4 w-4" />
-                  Conectar este Proyecto
+                  Seleccionar este Proyecto
                 </Button>
               </div>
             ) : (
@@ -169,43 +167,55 @@ export default function ProjectsPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Card key={project.id}>
-              <CardHeader className="flex flex-row items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">{project.name}</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1 font-mono">
-                    {project.api_key_prefix}...
-                  </p>
-                </div>
-                <Badge variant={project.is_active ? "default" : "secondary"}>
-                  {project.is_active ? "Activo" : "Inactivo"}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Enviadas</span>
-                    <span className="font-medium">
-                      {project.notifications_sent.toLocaleString()}
-                    </span>
+          {projects.map((project) => {
+            const isConnected = connectedId === project.id;
+            return (
+              <Card key={project.id} className={isConnected ? "ring-2 ring-primary" : ""}>
+                <CardHeader className="flex flex-row items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">{project.name}</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1 font-mono">
+                      {project.api_key_prefix}...
+                    </p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cuota mensual</span>
-                    <span className="font-medium">
-                      {project.monthly_quota.toLocaleString()}
-                    </span>
+                  <Badge variant={project.is_active ? "default" : "secondary"}>
+                    {project.is_active ? "Activo" : "Inactivo"}
+                  </Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Enviadas</span>
+                      <span className="font-medium">
+                        {project.notifications_sent.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cuota mensual</span>
+                      <span className="font-medium">
+                        {project.monthly_quota.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Creado</span>
+                      <span className="font-medium">
+                        {new Date(project.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Creado</span>
-                    <span className="font-medium">
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <Button
+                    variant={isConnected ? "secondary" : "default"}
+                    className="w-full mt-4 gap-2"
+                    disabled={isConnected}
+                    onClick={() => connectProject(project.id)}
+                  >
+                    <Plug className="h-4 w-4" />
+                    {isConnected ? "Seleccionado" : "Seleccionar"}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

@@ -2,31 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Bell, FolderOpen, Send, Users, Plug } from "lucide-react";
 import { useProject } from "@/contexts/project-context";
-import { useState } from "react";
+import Link from "next/link";
 
 export default function DashboardPage() {
-  const { project, apps, loading, connect, apiKey } = useProject();
-  const [keyInput, setKeyInput] = useState("");
-  const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleConnect = async () => {
-    if (!keyInput.trim()) return;
-    setConnecting(true);
-    setError("");
-    try {
-      await connect(keyInput.trim());
-      setKeyInput("");
-    } catch {
-      setError("API Key inválida o servidor no disponible");
-    } finally {
-      setConnecting(false);
-    }
-  };
+  const { project, apps, loading, projectId } = useProject();
 
   if (loading) {
     return (
@@ -36,7 +17,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!apiKey || !project) {
+  if (!projectId || !project) {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
@@ -44,30 +25,14 @@ export default function DashboardPage() {
           <CardContent className="pt-6 space-y-4">
             <div className="text-center mb-4">
               <Plug className="mx-auto h-12 w-12 text-muted-foreground/30 mb-4" />
-              <p className="text-lg font-medium">Conecta tu proyecto</p>
+              <p className="text-lg font-medium">Selecciona un proyecto</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Ingresa la API Key de tu proyecto para ver estadísticas y gestionar recursos.
-                Si aún no tienes un proyecto, créalo en la sección Proyectos.
+                Ve a la sección Proyectos para seleccionar o crear un proyecto.
               </p>
             </div>
-            <div>
-              <Label htmlFor="api-key">API Key</Label>
-              <Input
-                id="api-key"
-                type="password"
-                placeholder="Pega tu API Key aquí"
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button
-              onClick={handleConnect}
-              className="w-full"
-              disabled={connecting || !keyInput.trim()}
-            >
-              {connecting ? "Conectando..." : "Conectar Proyecto"}
+            <Button className="w-full gap-2" render={<Link href="/dashboard/projects" />}>
+                <FolderOpen className="h-4 w-4" />
+                Ir a Proyectos
             </Button>
           </CardContent>
         </Card>

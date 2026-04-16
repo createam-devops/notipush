@@ -33,17 +33,17 @@ import { projectApi } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
 
 export default function ApplicationsPage() {
-  const { apiKey, apps, refreshApps } = useProject();
+  const { projectId, apps, refreshApps } = useProject();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [platform, setPlatform] = useState("web");
   const [error, setError] = useState("");
 
   const handleCreate = async () => {
-    if (!name.trim() || !apiKey) return;
+    if (!name.trim() || !projectId) return;
     setError("");
     try {
-      const api = projectApi(apiKey);
+      const api = projectApi(projectId);
       await api.createApplication({ name: name.trim(), platform });
       await refreshApps();
       setDialogOpen(false);
@@ -54,9 +54,9 @@ export default function ApplicationsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!apiKey) return;
+    if (!projectId) return;
     try {
-      const api = projectApi(apiKey);
+      const api = projectApi(projectId);
       await api.deleteApplication(id);
       await refreshApps();
     } catch (err) {
@@ -73,7 +73,7 @@ export default function ApplicationsPage() {
     }
   };
 
-  if (!apiKey) {
+  if (!projectId) {
     return (
       <div>
         <h1 className="text-2xl font-bold mb-6">Aplicaciones</h1>

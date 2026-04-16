@@ -117,18 +117,16 @@ export const admin = {
   },
 };
 
-// --- Project endpoints (require API key) ---
+// --- Project endpoints (use project ID, proxied via Next.js with admin auth) ---
 
-export function projectApi(apiKey: string) {
-  const headers = { "X-API-Key": apiKey };
+export function projectApi(projectId: string) {
+  const headers = { "X-Project-Id": projectId };
 
   return {
-    // Current project info
     getProject() {
       return request<Project>("/api/v1/project", { headers });
     },
 
-    // Applications
     createApplication(data: { name: string; platform: string }) {
       return request<Application>("/api/v1/applications", {
         method: "POST",
@@ -148,7 +146,6 @@ export function projectApi(apiKey: string) {
       });
     },
 
-    // Topics
     createTopic(appId: string, data: { name: string; description?: string }) {
       return request<Topic>(`/api/v1/applications/${encodeURIComponent(appId)}/topics`, {
         method: "POST",
@@ -163,7 +160,6 @@ export function projectApi(apiKey: string) {
       });
     },
 
-    // Subscriptions
     listSubscriptions(appId: string) {
       return request<Subscription[]>(
         `/api/v1/applications/${encodeURIComponent(appId)}/subscriptions`,
@@ -171,7 +167,6 @@ export function projectApi(apiKey: string) {
       );
     },
 
-    // Notifications
     sendNotification(data: {
       app_id: string;
       topic_id?: string;

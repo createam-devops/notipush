@@ -11,12 +11,12 @@ import {
 import { projectApi, type Project, type Application } from "@/lib/api";
 
 interface ProjectContextValue {
-  apiKey: string | null;
+  projectId: string | null;
   project: Project | null;
   apps: Application[];
   selectedAppId: string | null;
   loading: boolean;
-  connect: (apiKey: string) => Promise<void>;
+  connect: (projectId: string) => Promise<void>;
   disconnect: () => void;
   selectApp: (appId: string | null) => void;
   refreshApps: () => Promise<void>;
@@ -24,10 +24,10 @@ interface ProjectContextValue {
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);
 
-const STORAGE_KEY = "notipush_api_key";
+const STORAGE_KEY = "notipush_project_id";
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [apps, setApps] = useState<Application[]>([]);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
@@ -43,30 +43,30 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const connectInternal = async (key: string) => {
-    const api = projectApi(key);
+  const connectInternal = async (id: string) => {
+    const api = projectApi(id);
     const [proj, appList] = await Promise.all([
       api.getProject(),
       api.listApplications(),
     ]);
-    setApiKey(key);
+    setProjectId(id);
     setProject(proj);
     setApps(appList);
     setSelectedAppId(appList.length > 0 ? appList[0].id : null);
-    localStorage.setItem(STORAGE_KEY, key);
+    localStorage.setItem(STORAGE_KEY, id);
   };
 
-  const connect = useCallback(async (key: string) => {
+  const connect = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      await connectInternal(key);
+      await connectInternal(id);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const disconnect = useCallback(() => {
-    setApiKey(null);
+    setProjectId(null);
     setProject(null);
     setApps([]);
     setSelectedAppId(null);
@@ -78,19 +78,19 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshApps = useCallback(async () => {
-    if (!apiKey) return;
-    const api = projectApi(apiKey);
+    if (!projectId) return;
+    const api = projectApi(projectId);
     const appList = await api.listApplications();
     setApps(appList);
     if (selectedAppId && !appList.find((a) => a.id === selectedAppId)) {
       setSelectedAppId(appList.length > 0 ? appList[0].id : null);
     }
-  }, [apiKey, selectedAppId]);
+  }, [projectId, selectedAppId]);
 
   return (
     <ProjectContext.Provider
       value={{
-        apiKey,
+        projectId,
         project,
         apps,
         selectedAppId,
