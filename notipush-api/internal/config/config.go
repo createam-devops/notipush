@@ -16,6 +16,7 @@ type Config struct {
 	API    APIConfig
 	Worker WorkerConfig
 	Admin  AdminConfig
+	VAPID  VAPIDConfig
 }
 
 type DBConfig struct {
@@ -54,6 +55,10 @@ type AdminConfig struct {
 	Secret string // Required in production; if empty, admin routes are open (dev mode)
 }
 
+type VAPIDConfig struct {
+	Contact string // mailto: URL for VAPID subscriber claim (RFC 8292)
+}
+
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
@@ -83,6 +88,9 @@ func Load() (*Config, error) {
 		},
 		Admin: AdminConfig{
 			Secret: getEnv("ADMIN_SECRET", ""),
+		},
+		VAPID: VAPIDConfig{
+			Contact: getEnv("VAPID_CONTACT", "mailto:admin@example.com"),
 		},
 	}, nil
 }

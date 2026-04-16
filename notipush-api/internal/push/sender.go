@@ -23,7 +23,7 @@ type PushResult struct {
 }
 
 // Send delivers a web push notification to the given subscription endpoint.
-func Send(endpoint, p256dh, auth, vapidPublic, vapidPrivate string, payload *Payload, ttl int) *PushResult {
+func Send(endpoint, p256dh, auth, vapidPublic, vapidPrivate, vapidContact string, payload *Payload, ttl int) *PushResult {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return &PushResult{Err: fmt.Errorf("marshal payload: %w", err)}
@@ -38,6 +38,7 @@ func Send(endpoint, p256dh, auth, vapidPublic, vapidPrivate string, payload *Pay
 	}
 
 	resp, err := webpush.SendNotification(body, sub, &webpush.Options{
+		Subscriber:      vapidContact,
 		VAPIDPublicKey:  vapidPublic,
 		VAPIDPrivateKey: vapidPrivate,
 		TTL:             ttl,

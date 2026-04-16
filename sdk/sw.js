@@ -25,8 +25,9 @@ self.addEventListener("push", function (event) {
       url: payload.url || "/",
       ...payload.data,
     },
-    vibrate: [200, 100, 200],
-    requireInteraction: false,
+    vibrate: [300, 100, 300, 100, 300],
+    requireInteraction: true,
+    silent: false,
   };
 
   event.waitUntil(

@@ -100,6 +100,55 @@
       }
       return outputArray;
     },
+
+    /**
+     * Send a push notification via the NotiPush API.
+     * @param {string} title - Notification title
+     * @param {string} body - Notification body
+     * @param {Object} [options]
+     * @param {string} [options.url] - URL to open on click
+     * @param {string} [options.icon] - Icon URL
+     * @param {Object} [options.data] - Custom data payload
+     * @param {string} [options.topic_id] - Target a specific topic
+     * @param {number} [options.ttl] - Time to live in seconds
+     * @returns {Promise<Object>} API response
+     */
+    async sendPushNotification(title, body, options = {}) {
+      if (!this._config) {
+        throw new Error("NotiPush: SDK not initialized. Call init() first.");
+      }
+
+      const payload = {
+        app_id: this._config.appId,
+        title,
+        body,
+      };
+
+      if (options.url) payload.url = options.url;
+      if (options.icon) payload.icon = options.icon;
+      if (options.data) payload.data_json = options.data;
+      if (options.topic_id) payload.topic_id = options.topic_id;
+      if (options.ttl) payload.ttl = options.ttl;
+
+      const response = await fetch(
+        `${this._config.serverUrl}/api/v1/notifications/send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": this._config.apiKey,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(`NotiPush: Send failed - ${result.error || response.statusText}`);
+      }
+
+      return result;
+    },
   };
 
   // Export

@@ -67,6 +67,8 @@ func main() {
 
 	logger.Info("worker starting", "concurrency", cfg.Worker.Concurrency)
 
+	vapidContact := cfg.VAPID.Contact
+
 	// Process messages
 	for i := 0; i < cfg.Worker.Concurrency; i++ {
 		go func(workerID int) {
@@ -83,7 +85,7 @@ func main() {
 				}
 
 				for msg := range msgs.Messages() {
-					processMessage(ctx, logger, msg, subRepo, notifRepo, projectRepo, natsClient, workerID)
+					processMessage(ctx, logger, msg, subRepo, notifRepo, projectRepo, natsClient, workerID, vapidContact)
 				}
 			}
 		}(i)
@@ -109,6 +111,7 @@ func processMessage(
 	projectRepo *db.ProjectRepo,
 	natsClient *broker.Broker,
 	workerID int,
+	vapidContact string,
 ) {
 	var notification models.NATSNotificationMessage
 	if err := json.Unmarshal(msg.Data(), &notification); err != nil {
@@ -172,6 +175,7 @@ func processMessage(
 		result := push.Send(
 			sub.Endpoint, sub.P256DH, sub.Auth,
 			notification.VAPIDPublic, notification.VAPIDPrivate,
+			vapidContact,
 			payload, notification.TTL,
 		)
 
