@@ -108,7 +108,7 @@
      * @param {Object} [options]
      * @param {string} [options.url] - URL to open on click
      * @param {string} [options.icon] - Icon URL
-     * @param {Object} [options.data] - Custom data payload
+     * @param {Object} [options.data_json] - Custom data payload
      * @param {string} [options.topic_id] - Target a specific topic
      * @param {number} [options.ttl] - Time to live in seconds
      * @returns {Promise<Object>} API response
@@ -126,7 +126,7 @@
 
       if (options.url) payload.url = options.url;
       if (options.icon) payload.icon = options.icon;
-      if (options.data) payload.data_json = options.data;
+      if (options.data_json) payload.data_json = options.data_json;
       if (options.topic_id) payload.topic_id = options.topic_id;
       if (options.ttl) payload.ttl = options.ttl;
 
